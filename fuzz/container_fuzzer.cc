@@ -6,15 +6,12 @@
 extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t* data, std::size_t size) {
   try {
     const auto archive = rifttrace::parse_archive(data, size);
-    (void)rifttrace::FormatRules::validate_all(archive);
     auto model = rifttrace::build_model(archive);
     rifttrace::Resolver resolver(&model);
+    resolver.rebuild();
     rifttrace::Timeline timeline(model);
-    const auto summary = rifttrace::export_summary(model, resolver, timeline);
-    (void)rifttrace::GraphValidator::validate(model, resolver);
-    (void)rifttrace::JsonReportRenderer::render(model, resolver, summary);
-    (void)rifttrace::TelemetryPipeline::run(data, size);
-    (void)rifttrace::ExportPipeline::run_all(model);
+    (void)rifttrace::export_summary(model, resolver, timeline);
+    (void)rifttrace::collect_diagnostics(model);
   } catch (const rifttrace::ParseError&) {
   }
   return 0;

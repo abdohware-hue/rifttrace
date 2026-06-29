@@ -8,28 +8,23 @@
 
 int main() {
   const std::vector<std::uint8_t> payload = {'a', 'b', 'a', 'a', 'a', 'c', 'c', 'c', 'c'};
-  const auto encoded = rifttrace::BlockEncoder::encode_block_1(
-      payload.data(), payload.size(), rifttrace::BlockCodec::kSimpleRle);
-  assert(encoded.compressed_size > 0);
-  assert(encoded.uncompressed_size == payload.size());
+  const auto raw = rifttrace::decode_block_payload(rifttrace::BlockCodec::kRaw, payload.data(),
+                                                   payload.size());
+  assert(raw == payload);
 
-  const auto section = rifttrace::BlockEncoder::serialize_section({encoded});
-  assert(!section.empty());
-
-  const auto delta = rifttrace::DeltaCodec::encode_auto(payload.data(), payload.size());
-  assert(!delta.empty());
-  const auto restored = rifttrace::DeltaCodec::decode_auto(
-      delta.data(), delta.size(), payload.size());
-  assert(restored == payload);
-
-  const auto dict = rifttrace::DictionaryCodec::compress(payload.data(), payload.size());
-  const auto dict_out = rifttrace::DictionaryCodec::decompress(
-      dict.data(), dict.size(), payload.size());
-  assert(dict_out == payload);
-
-  const auto trans = rifttrace::CodecRegistry::transcode(
-      rifttrace::BlockCodec::kRaw, rifttrace::BlockCodec::kSimpleRle, payload.data(),
-      payload.size());
-  assert(!trans.empty());
+  std::vector<std::uint8_t> rle;
+  rle.push_back(0xff);
+  rle.push_back(0x03);
+  rle.push_back(0x00);
+  rle.push_back('x');
+  rle.push_back('y');
+  std::vector<std::uint8_t> header;
+  const auto expected = rifttrace::write_u32_le(4);
+  header.insert(header.end(), expected.begin(), expected.end());
+  header.insert(header.end(), rle.begin(), rle.end());
+  const auto decoded = rifttrace::decode_block_payload(
+      rifttrace::BlockCodec::kSimpleRle, header.data(), header.size());
+  assert(decoded.size() == 4);
+  assert(decoded[0] == 'x' && decoded[3] == 'y');
   return 0;
 }

@@ -57,21 +57,21 @@ void splice_section_size(std::vector<std::uint8_t>& bytes, std::mt19937& rng) {
 }
 
 void append_stream_tail(std::vector<std::uint8_t>& bytes, std::mt19937& rng) {
-  rifttrace::BinaryWriter writer;
-  writer.write_u32_le(1);
-  writer.write_u8_le(static_cast<std::uint8_t>(rifttrace::StreamCommand::kAppendRecord));
+  std::vector<std::uint8_t> tail;
+  const auto count = rifttrace::write_u32_le(1);
+  tail.insert(tail.end(), count.begin(), count.end());
+  tail.push_back(static_cast<std::uint8_t>(rifttrace::StreamCommand::kAppendRecord));
+
   std::vector<std::uint8_t> payload;
   payload.push_back(static_cast<std::uint8_t>(rifttrace::RecordType::kObject));
   const auto obj = rifttrace::encode_object_record({100 + (rng() % 50), 0, 0, 0});
-  const auto len = static_cast<std::uint32_t>(obj.size());
-  payload.push_back(static_cast<std::uint8_t>(len & 0xff));
-  payload.push_back(static_cast<std::uint8_t>((len >> 8) & 0xff));
-  payload.push_back(static_cast<std::uint8_t>((len >> 16) & 0xff));
-  payload.push_back(static_cast<std::uint8_t>((len >> 24) & 0xff));
+  const auto len = rifttrace::write_u32_le(static_cast<std::uint32_t>(obj.size()));
+  payload.insert(payload.end(), len.begin(), len.end());
   payload.insert(payload.end(), obj.begin(), obj.end());
-  writer.write_u32_le(static_cast<std::uint32_t>(payload.size()));
-  writer.write_bytes(payload.data(), payload.size());
-  const auto& tail = writer.bytes();
+
+  const auto payload_len = rifttrace::write_u32_le(static_cast<std::uint32_t>(payload.size()));
+  tail.insert(tail.end(), payload_len.begin(), payload_len.end());
+  tail.insert(tail.end(), payload.begin(), payload.end());
   bytes.insert(bytes.end(), tail.begin(), tail.end());
 }
 

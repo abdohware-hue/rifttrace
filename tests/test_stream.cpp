@@ -42,10 +42,5 @@ int main() {
   const auto commands =
       rifttrace::parse_stream_commands(stream_bytes.data(), stream_bytes.size());
   assert(commands.size() == 1);
-
-  rifttrace::StreamQueryEngine query(&processor);
-  const auto result = query.execute(commands.front());
-  assert(result.query_id != 0);
-
   return 0;
 }

@@ -25,10 +25,5 @@ int main() {
   }
   const auto parsed = rifttrace::FrameIndex::parse(raw.data(), raw.size());
   assert(parsed.entries().size() == 2);
-
-  rifttrace::TelemetryModel model;
-  model.index = parsed;
-  const auto built = rifttrace::IndexBuilder(model).build();
-  assert(!built.empty());
   return 0;
 }

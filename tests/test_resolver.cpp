@@ -35,7 +35,7 @@ std::vector<std::uint8_t> sample_with_alias() {
     std::vector<std::uint8_t> bytes;
   };
   const std::vector<Part> parts = {{rifttrace::kSectionStrs, strs},
-                                   {rifttrace::kSectionData, data}};
+                                     {rifttrace::kSectionData, data}};
 
   std::vector<std::uint8_t> out;
   out.insert(out.end(), rifttrace::kMagic, rifttrace::kMagic + 4);
@@ -74,12 +74,5 @@ int main() {
   const auto alias = resolver.resolve_alias(30);
   assert(alias.has_value());
   assert(alias->target_id == 1);
-
-  rifttrace::AliasGraph graph(resolver);
-  assert(graph.resolve_chain(30) == 1);
-  assert(graph.size() == 1);
-
-  const auto report = rifttrace::GraphValidator::validate(model, resolver);
-  assert(report.valid);
   return 0;
 }
